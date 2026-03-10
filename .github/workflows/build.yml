@@ -1,0 +1,9 @@
+name: PH-OS Build S8
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Print Welcome
+        run: echo "Starting PH-OS Android Developer Edition Build for Galaxy S8!"
