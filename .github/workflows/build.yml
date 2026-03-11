@@ -21,10 +21,17 @@ jobs:
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
+          
+          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.lex.c_shipped || true
-          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-parser.tab.c || true
+          
+          # 2. УМНЫЙ ФИКС: Ищем по всему ядру конфликтные переменные и исправляем
+          grep -rl 'YYLTYPE yylloc;' . | xargs sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' || true
+          
+          # 3. Убираем запреты на ошибки во всех Makefile подпапок
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} + || true
+          
+          # 4. ВАРКА с максимальным игнорированием придирок
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
 
       - name: Upload
@@ -32,6 +39,7 @@ jobs:
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
