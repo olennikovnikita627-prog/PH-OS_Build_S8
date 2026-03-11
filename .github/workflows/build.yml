@@ -4,47 +4,35 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Берем самый быстрый и доступный сервер
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         run: |
           sudo apt-get update
-          # Ставим всё необходимое, включая компилятор aarch64
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-                  - name: Build
+      - name: Build
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          
-          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          
-          # 2. ТИХИЙ ФИКС (без лишних команд, которые могут упасть)
-          # Просто проходим по всем файлам в scripts/dtc и исправляем yylloc
           sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.lex.c_shipped || true
           sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-parser.tab.c || true
-          
-          # 3. Вырезаем -Werror (тоже через || true, чтобы не падать)
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} + || true
-          
-          # 4. ПОЕХАЛИ! (Включаем -fcommon для хоста и ядра)
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
-
-
-
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
