@@ -6,8 +6,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Print Welcome
-        run: echo "Starting PH-OS Android Developer Edition Build for Galaxy S8!"
-- name: Check Server Power
+        run: echo "Starting PH-OS Build!"
+      - name: Check Server
         run: |
           nproc
           free -h
+
+
