@@ -13,12 +13,11 @@ jobs:
           echo "Tools installed successfully! 🛠️"
 
       - name: Clone Kernel Source
-        run: |
-          git clone --depth=1 https://github.com kernel
-          echo "Kernel source cloned! 🧬"
+        run: git clone --depth=1 https://github.com kernel
 
       - name: Check Progress
         run: ls -l kernel
+
         
 
 
