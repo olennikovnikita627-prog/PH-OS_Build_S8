@@ -4,41 +4,39 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup (Машина времени от Google)
+      - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev
-          # Скачиваем ТОТ САМЫЙ компилятор 4.9, на котором S8 чувствует себя как дома
-          git clone --depth=1 https://android.googlesource.com toolchain
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
-      - name: Clone (Твои исходники)
+      - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
       - name: Build
         run: |
           cd kernel
           export ARCH=arm64
-          # Указываем путь к нашему портативному компилятору
-          export CROSS_COMPILE=$(pwd)/../toolchain/bin/aarch64-linux-android-
+          export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # Создаем конфиг для S8 (dreamlte)
+          # 1. Создаем конфиг (стандартный для этого репо)
           make exynos8895-dreamlte_defconfig
           
-          # Тотальная зачистка всех Makefile от запретов на ошибки
+          # 2. Убираем все ошибки-предупреждения
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
           
-          # Варим кашу (на GCC 4.9 она должна быть идеальной!)
-          make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
+          # 3. Варим кашу с флагом -fcommon (жизненно важен для этого репо!)
+          make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
