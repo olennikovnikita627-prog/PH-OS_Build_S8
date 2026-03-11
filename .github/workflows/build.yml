@@ -4,13 +4,14 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # Используем более старую версию Ubuntu (20.04 вместо latest)
+    runs-on: ubuntu-latest  # Возвращаемся на быстрые сервера
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup (Старая школа)
+      - name: Setup
         run: |
           sudo apt-get update
+          # Устанавливаем конкретно 9-ю версию компилятора
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
 
       - name: Clone
@@ -19,16 +20,16 @@ jobs:
       - name: Build
         run: |
           cd kernel
-          # Указываем путь к старому компилятору
           export ARCH=arm64
+          # Четко указываем использовать 9-ку
           export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
           
           make exynos8895-dreamlte_defconfig
           
-          # Отключаем придирки
+          # Вырезаем все придирки компилятора
           sed -i 's/-Werror//g' Makefile
           
-          # Варим кашу на медленном огне
+          # Варим! Добавляем флаги игнорирования для GCC 9
           make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
 
       - name: Upload
@@ -36,6 +37,7 @@ jobs:
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
