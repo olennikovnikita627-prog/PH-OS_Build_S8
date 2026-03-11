@@ -1,30 +1,43 @@
-name: PH-OS Build S8
-on: [push]
+name: PH-OS Build S8 - Developer Edition
+
+on: [push, workflow_dispatch] # добавил запуск вручную
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Tools
+      - name: Установка инструментов (Кухня)
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu lz4
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
-      - name: Build Real Kernel
+      - name: Клонирование исходников (Ингредиенты)
         run: |
+          # ВАЖНО: Замени ССЫЛКУ ниже на реальный адрес твоего репозитория с ядром!
           git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
+
+      - name: Сборка ядра (Варка)
+        run: |
           cd kernel
-          sed -i '5s/.*/EXTRAVERSION = -Android-Developer-Edition/' Makefile
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
+          
+          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          # ВЫРЕЗАЕМ ОШИБКИ ПО-НАСТОЯЩЕМУ
-          scripts/config --disable CONFIG_USB_G_ANDROID
-          scripts/config --disable CONFIG_VISION_SCORE
-          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
-          echo "CHECKING FINAL FILE..."
-          ls -l arch/arm64/boot/Image.gz-dtb
+          
+          # 2. Запускаем саму компиляцию (используем все ядра процессора)
+          make -j$(nproc)
+          
+          echo "Сборка завершена! Проверяем наличие файла..."
+          ls -l arch/arm64/boot/Image.gz-dtb || echo "Файл не найден! Проверь ошибки выше."
+
+      - name: Сохранение готового ядра (Выдача блюда)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Developer-Edition-Kernel-S8
+          path: kernel/arch/arm64/boot/Image.gz-dtb
 
 
 
