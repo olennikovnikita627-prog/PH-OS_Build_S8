@@ -4,12 +4,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Print Welcome
-        run: echo "Starting PH-OS Build!"
-      - name: Check Server
+      - uses: actions/checkout@v4
+      
+      - name: Install Build Tools
         run: |
-          nproc
-          free -h
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3
+          echo "Tools installed successfully! 🛠️"
+
+      - name: Clone Kernel Source
+        run: |
+          git clone --depth=1 https://github.com kernel
+          echo "Kernel source cloned! 🧬"
+
+      - name: Check Progress
+        run: ls -l kernel
+        
 
 
