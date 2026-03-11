@@ -1,6 +1,6 @@
-name: PH-OS Build S8 - Developer Edition
+name: PH-OS Build S8
 
-on: [push, workflow_dispatch] # добавил запуск вручную
+on: [push, workflow_dispatch]
 
 jobs:
   build:
@@ -8,36 +8,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Установка инструментов (Кухня)
+      - name: Setup
         run: |
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
-      - name: Клонирование исходников (Ингредиенты)
-        run: |
-          # ВАЖНО: Замени ССЫЛКУ ниже на реальный адрес твоего репозитория с ядром!
-          git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
+      - name: Clone
+        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-                  - name: Сборка ядра (Варка)
+      - name: Build
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          
-          # 1. Сначала просто создаем конфиг (проверим, работает ли вообще make)
           make exynos8895-dreamlte_defconfig
-          
-          # 2. Запускаем сборку с минимальными флагами, игнорируя всё
-          # Если упадет — значит дело в коде ядра, а не в настройках
-          make -j$(nproc) W=0
+          # Отключаем ошибки из-за предупреждений
+          sed -i 's/-Werror//g' Makefile
+          make -j$(nproc) KCFLAGS="-w"
 
-
-
-      - name: Сохранение готового ядра (Выдача блюда)
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Developer-Edition-Kernel-S8
+          name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
