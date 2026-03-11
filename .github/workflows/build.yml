@@ -11,7 +11,7 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -20,10 +20,15 @@ jobs:
         run: |
           cd kernel
           export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
+          
+          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          # Удаляем флаг -Werror во всех Makefile подпапок
+          
+          # 2. Тотальная зачистка всех Makefile от запретов
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
+          
+          # 3. Запуск варки с игнорированием всего лишнего
           make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
 
       - name: Upload
@@ -31,6 +36,7 @@ jobs:
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
