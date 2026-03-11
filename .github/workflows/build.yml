@@ -11,7 +11,10 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
+          # Ставим 6-ю версию компилятора — она «родная» для этого ядра
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-6-aarch64-linux-gnu
+
+      
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -20,10 +23,16 @@ jobs:
         run: |
           cd kernel
           export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
+          # Указываем использовать именно 6-ку
+          export CROSS_COMPILE=aarch64-linux-gnu-gcc-6
+          
           make exynos8895-dreamlte_defconfig
+          
+          # Вырезаем придирки
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
-          make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
+          
+          # Запуск варки (на GCC 6 дополнительные флаги обычно не нужны)
+          make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
 
       - name: Upload
         uses: actions/upload-artifact@v4
