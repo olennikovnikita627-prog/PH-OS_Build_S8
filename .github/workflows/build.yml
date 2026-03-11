@@ -5,16 +5,14 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Запускаем сборку внутри старого контейнера
-    container:
-      image: ubuntu:16.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup (Ретро-кухня)
+      - name: Setup
         run: |
-          apt-get update
-          apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
+          sudo apt-get update
+          # Устанавливаем классический тулчейн
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -25,12 +23,14 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           
+          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
           
-          # В старой системе даже -Werror может не мешать, но на всякий случай:
+          # 2. Главный костыль: отключаем ошибки компилятора в заголовках
           sed -i 's/-Werror//g' Makefile
           
-          make -j$(nproc)
+          # 3. Запуск с флагом игнорирования несовместимости типов (частая беда S8)
+          make -j$(nproc) KCFLAGS="-w -fno-pie" HOSTCFLAGS="-w"
 
       - name: Upload
         uses: actions/upload-artifact@v4
