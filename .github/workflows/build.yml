@@ -5,18 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install Build Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3
-          echo "Tools installed successfully! 🛠️"
-
-      - name: Clone Kernel Source
-        run: git clone --depth=1 https://github.com kernel
-
-      - name: Check Progress
-        run: ls -l kernel
+      - name: Clone Kernel
+        run: git clone --depth=1 https://github.com        
 
         
 
