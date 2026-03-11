@@ -11,33 +11,27 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update
-          # Устанавливаем классический тулчейн
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-            - name: Build
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
+
+      - name: Clone
+        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
+
+      - name: Build
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          
-          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          
-          # 2. ЖЕСТКАЯ ЗАЧИСТКА (Вырезаем причину всех Error 2)
-          # Эта команда найдет все Makefile и удалит из них запрет на ошибки
+          # Удаляем флаг -Werror во всех Makefile подпапок
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
-          
-          # 3. Запуск без лишних наворотов, просто игнорируем варнинги
           make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
-
-
-      - name: Clone
-        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git 
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
