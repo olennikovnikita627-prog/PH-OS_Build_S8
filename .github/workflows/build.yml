@@ -14,28 +14,23 @@ jobs:
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
 
       - name: Clone
-        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git 
-              - name: Build
+        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
+
+      - name: Build
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
-          
-          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
-          
-          # 2. Тотальное игнорирование ошибок и возврат к старым правилам (-fcommon)
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
-          
-          # 3. Сама варка
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
-
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
