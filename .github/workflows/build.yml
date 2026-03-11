@@ -17,24 +17,26 @@ jobs:
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-            - name: Build
+                  - name: Build
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # 1. Конфиг
+          # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
           
-          # 2. ТОТАЛЬНЫЙ ФИКС ДЛЯ DTC (Исправляем все файлы сразу)
-          # Эта магия находит все упоминания YYLTYPE yylloc и делает их внешними
-          grep -rl 'YYLTYPE yylloc;' scripts/dtc/ | xargs sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' || true
+          # 2. ТИХИЙ ФИКС (без лишних команд, которые могут упасть)
+          # Просто проходим по всем файлам в scripts/dtc и исправляем yylloc
+          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.lex.c_shipped || true
+          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-parser.tab.c || true
           
-          # 3. Зачистка всех Makefile
-          find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
+          # 3. Вырезаем -Werror (тоже через || true, чтобы не падать)
+          find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} + || true
           
-          # 4. ВАРКА с максимальными костылями для старого кода
+          # 4. ПОЕХАЛИ! (Включаем -fcommon для хоста и ядра)
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
+
 
 
 
