@@ -4,15 +4,17 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Возвращаемся на быстрые сервера
+    runs-on: ubuntu-latest
+    # Запускаем сборку внутри старого контейнера
+    container:
+      image: ubuntu:16.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup
+      - name: Setup (Ретро-кухня)
         run: |
-          sudo apt-get update
-          # Устанавливаем конкретно 9-ю версию компилятора
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
+          apt-get update
+          apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -21,22 +23,21 @@ jobs:
         run: |
           cd kernel
           export ARCH=arm64
-          # Четко указываем использовать 9-ку
-          export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
+          export CROSS_COMPILE=aarch64-linux-gnu-
           
           make exynos8895-dreamlte_defconfig
           
-          # Вырезаем все придирки компилятора
+          # В старой системе даже -Werror может не мешать, но на всякий случай:
           sed -i 's/-Werror//g' Makefile
           
-          # Варим! Добавляем флаги игнорирования для GCC 9
-          make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
+          make -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
