@@ -24,13 +24,10 @@ jobs:
           # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
           
-          # 2. ЖЕСТОЧАЙШАЯ ЗАЧИСТКА (теперь и для скриптов хоста)
+          # 2. Тотальное игнорирование ошибок и возврат к старым правилам (-fcommon)
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
-          # Убираем проверку на дублирование определений (частая ошибка в dtc)
-          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.lex.c_shipped || true
           
-          # 3. Запуск варки с флагами для старых скриптов
-          # Добавили -fcommon — это исправит ту самую ошибку в scripts/dtc
+          # 3. Сама варка
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
 
 
