@@ -5,13 +5,16 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Магия здесь: запускаем всё внутри старой ОС
+    container:
+      image: ubuntu:18.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup
+      - name: Setup (Ретро-инструменты)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
+          apt-get update
+          apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -22,26 +25,21 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # 1. Конфиг
           make exynos8895-dreamlte_defconfig
           
-          # 2. СУПЕР-МОЩНЯК (Широкий поиск + Самоочистка)
-          # Сначала делаем всех extern (создаем риск дубля)
-          grep -rl 'YYLTYPE yylloc;' scripts/dtc/ | xargs sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' || true
-          # ТУТ ЖЕ исправляем мой косяк с двойным extern, если он вылез
-          grep -rl 'extern extern' scripts/dtc/ | xargs sed -i 's/extern extern/extern/g' || true
-          
-          # 3. Зачистка Makefile
+          # В Ubuntu 18.04 даже yylloc может собраться сам, 
+          # но на всякий случай оставим мягкий фикс
+          sed -i 's/YYLTYPE yylloc;/extern YYLTYPE yylloc;/g' scripts/dtc/dtc-lexer.lex.c_shipped || true
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} + || true
           
-          # 4. ВАРКА
-          make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
+          make -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
