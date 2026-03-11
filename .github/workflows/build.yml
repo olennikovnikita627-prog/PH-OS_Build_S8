@@ -18,21 +18,19 @@ jobs:
           # ВАЖНО: Замени ССЫЛКУ ниже на реальный адрес твоего репозитория с ядром!
           git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-            - name: Сборка ядра (Варка)
+                  - name: Сборка ядра (Варка)
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # 1. Конфиг
+          # 1. Сначала просто создаем конфиг (проверим, работает ли вообще make)
           make exynos8895-dreamlte_defconfig
           
-          # 2. ПОЛНОЕ ОТКЛЮЧЕНИЕ ПРОВЕРОК (Тяжёлая артиллерия)
-          # Мы заменяем все упоминания -Werror на пустоту во всех файлах сборки
-          find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
-          
-          # 3. Запуск с флагами игнорирования
-          make -j$(nproc) KCFLAGS="-w" KCPPFLAGS="-w"
+          # 2. Запускаем сборку с минимальными флагами, игнорируя всё
+          # Если упадет — значит дело в коде ядра, а не в настройках
+          make -j$(nproc) W=0
+
 
 
       - name: Сохранение готового ядра (Выдача блюда)
