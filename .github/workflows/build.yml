@@ -16,27 +16,24 @@ jobs:
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-            - name: Build
+      - name: Build
         run: |
           cd kernel
-          export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
+          # Подготовка
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- exynos8895-dreamlte_defconfig
           
-          # 1. Убираем флаг -Werror везде, где он может быть
-          find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
+          # Отключаем придирки компилятора прямо в главном файле
+          sed -i 's/-Werror//g' Makefile
           
-          # 2. Создаем конфиг
-          make exynos8895-dreamlte_defconfig
-          
-          # 3. Варим кашу (добавляем HOSTCFLAGS, чтобы скрипты собрались без ошибок)
-          make -j$(nproc) HOSTCFLAGS="-w" KCFLAGS="-w"
-
+          # Запуск варки с игнорированием всех ошибок (и хоста, и ядра)
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-w" HOSTCFLAGS="-w"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
