@@ -15,16 +15,16 @@ jobs:
       - name: Clone Kernel
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-      - name: Configure and Compile
+            - name: Configure and Compile
         run: |
           cd kernel
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           make exynos8895-dreamlte_defconfig
           sed -i '5s/.*/EXTRAVERSION = -Android-Developer-Edition/' Makefile
-          echo "Starting Compilation... 🔥"
-          make -j4
+          make -j4 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
           echo "Kernel Compilation Finished! 🏆"
+
 
       - name: Check Output
         run: ls -l kernel/arch/arm64/boot/Image.gz-dtb || echo "Kernel file not found yet ❌"
