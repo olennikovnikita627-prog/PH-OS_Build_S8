@@ -4,13 +4,14 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest  # Берем самый быстрый и доступный сервер
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup
         run: |
           sudo apt-get update
+          # Ставим всё необходимое, включая компилятор aarch64
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
       - name: Clone
@@ -22,13 +23,13 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           
-          # 1. Создаем конфиг (стандартный для этого репо)
+          # Создаем конфиг
           make exynos8895-dreamlte_defconfig
           
-          # 2. Убираем все ошибки-предупреждения
+          # ЖЕСТКАЯ ЗАЧИСТКА: вырезаем запрет на ошибки во всех Makefile
           find . -name "Makefile*" -type f -exec sed -i 's/-Werror//g' {} +
           
-          # 3. Варим кашу с флагом -fcommon (жизненно важен для этого репо!)
+          # ВАРКА: -fcommon спасет от ошибки в scripts/dtc на новой системе
           make -j$(nproc) KCFLAGS="-w -fcommon" HOSTCFLAGS="-w -fcommon"
 
       - name: Upload
@@ -36,6 +37,7 @@ jobs:
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
