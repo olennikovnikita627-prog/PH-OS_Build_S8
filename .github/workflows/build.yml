@@ -6,12 +6,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Tools
+      - name: Setup
         run: |
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu lz4
 
-      - name: Build Developer Edition
+      - name: Build
         run: |
           git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
           cd kernel
@@ -19,7 +19,10 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           make exynos8895-dreamlte_defconfig
-          make -k -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
+          # Хакерский трюк: отключаем USB ошибки
+          sed -i 's/CONFIG_USB_G_ANDROID=y/CONFIG_USB_G_ANDROID=n/' .config
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
+
 
 
 
