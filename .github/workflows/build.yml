@@ -19,9 +19,11 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           make exynos8895-dreamlte_defconfig
-          # Хакерский трюк: отключаем USB ошибки
-          sed -i 's/CONFIG_USB_G_ANDROID=y/CONFIG_USB_G_ANDROID=n/' .config
+          # Отключаем USB гаджеты, чтобы не было ошибок
+          scripts/config --disable CONFIG_USB_G_ANDROID
+          scripts/config --disable CONFIG_USB_ANDROID_SAMSUNG
           make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
+
 
 
 
