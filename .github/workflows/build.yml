@@ -11,15 +11,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
 
-      - name: Clone
-        run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
-
-      - name: Compile
+      - name: Build Kernel
         run: |
+          git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
           cd kernel
           sed -i '5s/.*/EXTRAVERSION = -Android-Developer-Edition/' Makefile
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- exynos8895-dreamlte_defconfig
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make exynos8895-dreamlte_defconfig
           make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+
 
 
 
