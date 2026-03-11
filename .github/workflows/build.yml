@@ -23,12 +23,14 @@ jobs:
           sed -i '5s/.*/EXTRAVERSION = -Android-Developer-Edition/' Makefile
           echo "Name set! ✍️"
 
-      - name: Configure Kernel
+            - name: Configure Kernel
         run: |
           cd kernel
           export ARCH=arm64
-          make CROSS_COMPILE=aarch64-linux-gnu- exynos8895-greatqlte_defconfig
-          echo "Configured for S8! 🎯"
+          ls arch/arm64/configs/ | grep defconfig
+          make CROSS_COMPILE=aarch64-linux-gnu- exynos8895_defconfig || make CROSS_COMPILE=aarch64-linux-gnu- universal8895_defconfig
+          echo "Configured! 🎯"
+
 
       
 
