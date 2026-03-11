@@ -6,12 +6,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Tools
+      - name: Setup Final Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
-
-      - name: Build Kernel
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu lz4 libssl-dev
+      
+      - name: Clone and Compile
         run: |
           git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
           cd kernel
@@ -20,6 +20,7 @@ jobs:
           export CROSS_COMPILE=aarch64-linux-gnu-
           make exynos8895-dreamlte_defconfig
           make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+
 
 
 
