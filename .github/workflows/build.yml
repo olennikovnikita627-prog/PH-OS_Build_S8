@@ -4,14 +4,14 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Используем более старую версию Ubuntu (20.04 вместо latest)
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup
+      - name: Setup (Старая школа)
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
+          sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-9-aarch64-linux-gnu
 
       - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
@@ -19,20 +19,24 @@ jobs:
       - name: Build
         run: |
           cd kernel
-          # Подготовка
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- exynos8895-dreamlte_defconfig
+          # Указываем путь к старому компилятору
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-gcc-9
           
-          # Отключаем придирки компилятора прямо в главном файле
+          make exynos8895-dreamlte_defconfig
+          
+          # Отключаем придирки
           sed -i 's/-Werror//g' Makefile
           
-          # Запуск варки с игнорированием всех ошибок (и хоста, и ядра)
-          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-w" HOSTCFLAGS="-w"
+          # Варим кашу на медленном огне
+          make -j$(nproc) KCFLAGS="-w" HOSTCFLAGS="-w"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Developer-Edition-Kernel
           path: kernel/arch/arm64/boot/Image.gz-dtb
+
 
 
 
