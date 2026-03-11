@@ -11,7 +11,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu lz4
 
-      - name: Build Developer Edition
+      - name: Build Real Kernel
         run: |
           git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
           cd kernel
@@ -19,10 +19,13 @@ jobs:
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           make exynos8895-dreamlte_defconfig
-          # Команда "Игнорируй ошибки и делай ядро!"
-          make -i -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
-          echo "Checking if kernel exists..."
-          ls -l arch/arm64/boot/Image.gz-dtb || echo "Nearly there! 🏆"
+          # ВЫРЕЗАЕМ ОШИБКИ ПО-НАСТОЯЩЕМУ
+          scripts/config --disable CONFIG_USB_G_ANDROID
+          scripts/config --disable CONFIG_VISION_SCORE
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- KCFLAGS="-Wno-error"
+          echo "CHECKING FINAL FILE..."
+          ls -l arch/arm64/boot/Image.gz-dtb
+
 
 
 
