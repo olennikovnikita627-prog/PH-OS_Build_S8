@@ -6,28 +6,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Tools
+      - name: Setup Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential curl flex git libelf-dev libssl-dev python3 libncurses5-dev gcc-aarch64-linux-gnu
-          echo "Ready to Build! 🛠️"
 
-      - name: Clone Kernel
+      - name: Clone
         run: git clone --depth=1 https://github.com/exynos8895/android_kernel_samsung_universal8895.git kernel
 
-            - name: Configure and Compile
+      - name: Compile
         run: |
           cd kernel
-          export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          make exynos8895-dreamlte_defconfig
           sed -i '5s/.*/EXTRAVERSION = -Android-Developer-Edition/' Makefile
-          make -j4 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
-          echo "Kernel Compilation Finished! 🏆"
-
-
-      - name: Check Output
-        run: ls -l kernel/arch/arm64/boot/Image.gz-dtb || echo "Kernel file not found yet ❌"
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- exynos8895-dreamlte_defconfig
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 
 
 
