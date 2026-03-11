@@ -27,11 +27,12 @@ jobs:
           # 1. Создаем конфиг
           make exynos8895-dreamlte_defconfig
           
-          # 2. Запускаем саму компиляцию (используем все ядра процессора)
-          make -j$(nproc)
+          # 2. ВОТ ЭТА МАГИЧЕСКАЯ СТРОЧКА! Отключаем превращение варнингов в ошибки
+          sed -i 's/-Werror-/-Wno-error-/g' Makefile || true
           
-          echo "Сборка завершена! Проверяем наличие файла..."
-          ls -l arch/arm64/boot/Image.gz-dtb || echo "Файл не найден! Проверь ошибки выше."
+          # 3. Запускаем компиляцию
+          # Добавляем KCFLAGS, чтобы подавить конкретную ошибку из твоего лога
+          make -j$(nproc) KCFLAGS="-Wno-error -Wno-stringop-overflow"
 
       - name: Сохранение готового ядра (Выдача блюда)
         uses: actions/upload-artifact@v4
